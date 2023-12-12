@@ -20,7 +20,7 @@ export class ScoreModel {
   constructor(option: ScoreModelOption);
   constructor(option: ScoreModelOption | Vector[]) {
     if (option instanceof Array) {
-      this.calculateArgs(option);
+      this.calculateArgs(option.map((item) => ({ x: math.multiply(item.x, 1e-8), y: item.y })));
     } else {
       this.a = option.a;
       this.b = option.b;
@@ -30,7 +30,11 @@ export class ScoreModel {
 
   //幂函数公式
   f(x: number) {
-    return math.chain(this.a).multiply(math.pow(x, this.b)).add(this.c).done() as number;
+    return math
+      .chain(this.a)
+      .multiply(math.pow(math.multiply(x, 1e-8), this.b))
+      .add(this.c)
+      .done() as number;
   }
 
   inverseF(y: number) {
@@ -39,11 +43,12 @@ export class ScoreModel {
       .subtract(this.c)
       .divide(this.a)
       .pow(1 / this.b)
+      .multiply(1e8)
       .done() as number;
   }
 
   private calculateArgs(score: Vector[]) {
-    this.c = this.getEstimate(score, score[0].y - 0.01, 1e-6);
+    this.c = this.getEstimate(score, score[0].y - 1e-8, 1e-10);
     this.b = math.divide(
       math.subtract(math.log(math.subtract(score[1].y, this.c)), math.log(math.subtract(score[0].y, this.c))),
       math.subtract(math.log(score[1].x), math.log(score[0].x))
@@ -51,9 +56,9 @@ export class ScoreModel {
     this.a = math.exp(
       math.subtract(math.log(math.subtract(score[0].y, this.c)), math.multiply(this.b, math.log(score[0].x)))
     ) as number;
-    console.log(
-      math.subtract(math.log(math.subtract(score[0].y, this.c)), math.multiply(this.b, math.log(score[0].x)))
-    );
+    if (this.a === 0) {
+      throw new Error("数值超过上限");
+    }
   }
 
   private getEstimate(score: Vector[], c: number, l: number) {
@@ -61,6 +66,9 @@ export class ScoreModel {
     do {
       p = c;
       c = math.subtract(c, math.divide(this.fc(score, c), this.derivative(score, c))) as number;
+      if (isNaN(c)) {
+        throw new Error("发生未知错误");
+      }
     } while (math.abs(math.subtract(c, p)) > l);
     return c;
   }

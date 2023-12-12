@@ -1,48 +1,48 @@
 <template>
   <n-grid x-gap="12" :cols="2" :style="{ height: '100%' }">
     <n-grid-item>
-      <n-space>
+      <n-space vertical>
         <n-card>
-          <n-form
-            label-placement="left"
-            :style="{
-              width: '600px',
-            }"
-          >
-            <template v-for="(item, index) in score" :key="index">
-              <n-grid :cols="24" :x-gap="24">
-                <n-form-item-gi :span="12" :label="`分数${index + 1}：`">
-                  <n-input-number
-                    v-model:value="item.x"
-                    placeholder="请输入分数"
-                    :show-button="false"
-                    :keyboard="{ ArrowUp: false, ArrowDown: false }"
-                    :update-value-on-input="false"
-                  />
-                </n-form-item-gi>
-                <n-form-item-gi :span="12" :label="`pt${index + 1}：`">
-                  <n-input-number
-                    v-model:value="item.y"
-                    placeholder="请输入pt"
-                    :show-button="false"
-                    :keyboard="{ ArrowUp: false, ArrowDown: false }"
-                    :update-value-on-input="false"
-                  />
-                </n-form-item-gi>
-              </n-grid>
-            </template>
-          </n-form>
-          <div>
-            <n-input
-              v-model:value="modelName"
-              placeholder="请输入曲线名称"
-              style="width: 200px; margin-right: 20px"
-            ></n-input>
-            <n-button type="primary" @click="createScoreCurve">生成分数曲线</n-button>
-          </div>
+          <n-space vertical>
+            <n-form
+              label-placement="left"
+            >
+              <template v-for="(item, index) in score" :key="index">
+                <n-grid :cols="24" :x-gap="24">
+                  <n-form-item-gi :span="12" :label="`分数${index + 1}：`">
+                    <n-input-number
+                      v-model:value="item.x"
+                      placeholder="请输入分数"
+                      :show-button="false"
+                      :keyboard="{ ArrowUp: false, ArrowDown: false }"
+                      :update-value-on-input="false"
+                    />
+                  </n-form-item-gi>
+                  <n-form-item-gi :span="12" :label="`pt${index + 1}：`">
+                    <n-input-number
+                      v-model:value="item.y"
+                      placeholder="请输入pt"
+                      :show-button="false"
+                      :keyboard="{ ArrowUp: false, ArrowDown: false }"
+                      :update-value-on-input="false"
+                    />
+                  </n-form-item-gi>
+                </n-grid>
+              </template>
+            </n-form>
+            <n-a href="https://wikiwiki.jp/thscorekg" target="_blank">查询WR</n-a>
+            <div>
+              <n-input
+                v-model:value="modelName"
+                placeholder="请输入曲线名称"
+                style="width: 200px; margin-right: 20px"
+              ></n-input>
+              <n-button type="primary" @click="createScoreCurve">生成分数曲线</n-button>
+            </div>
+          </n-space>
         </n-card>
         <n-card>
-          <n-grid :cols="24" :x-gap="24" :style="{ width: '600px' }">
+          <n-grid :cols="24" :x-gap="24">
             <n-form-item-gi :span="12" label="曲线名称：" label-placement="left">
               <n-select v-model:value="selectedModel" :options="selectOptions" placeholder="请选择曲线" />
             </n-form-item-gi>
@@ -101,6 +101,7 @@ import {
   NCard,
   NSpace,
   NSelect,
+  NA,
   useDialog,
   useMessage,
 } from "naive-ui";
@@ -120,7 +121,6 @@ interface ModelData {
 export default defineComponent({
   name: "Home",
   components: {
-    NFormItem,
     NForm,
     NGrid,
     NGridItem,
@@ -132,6 +132,7 @@ export default defineComponent({
     NCard,
     NSpace,
     NSelect,
+    NA,
   },
   setup() {
     const dialog = useDialog();
@@ -205,7 +206,7 @@ export default defineComponent({
     ];
     const result = reactive({
       curve: "",
-      input: 0,
+      input: "",
       type: "",
       output: "",
     });
@@ -288,7 +289,7 @@ export default defineComponent({
       }
       const curve = scoreCurves[selectedModel.value];
       result.curve = curve.name;
-      result.input = inputNumber.value;
+      result.input = inputNumber.value.toFixed(2);
       result.type = "计算分数";
       result.output = curve.model.inverseF(inputNumber.value).toFixed(0);
     };
@@ -300,7 +301,7 @@ export default defineComponent({
       const curve = scoreCurves[selectedModel.value];
       const output = curve.model.f(inputNumber.value);
       result.curve = curve.name;
-      result.input = inputNumber.value;
+      result.input = inputNumber.value.toFixed(0);
       result.type = "计算pt";
       result.output = output > 0 ? output.toFixed(2) : "0";
     };
