@@ -29,7 +29,7 @@ module.exports = {
     // },
   },
   configureWebpack: {
-    name: "tcc-tool",
+    name: "tcc-tools",
     resolve: {
       alias: {
         "@": resolve("src"),

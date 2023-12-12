@@ -25,7 +25,7 @@
           >
             <n-menu :options="menuOptions" :value="currentRoute" />
           </n-layout-sider>
-          <n-layout-content :style="{ padding: '10px' }">
+          <n-layout-content :style="{ padding: '10px' }" :native-scrollbar="false">
             <router-view />
           </n-layout-content>
         </n-layout>

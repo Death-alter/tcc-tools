@@ -43,44 +43,54 @@ export class ScoreModel {
   }
 
   private calculateArgs(score: Vector[]) {
-    this.b = this.getEstimate(score, 0.01, 30, 1e-11, 100);
-    this.a = math.divide(
-      math.subtract(score[1].y, score[0].y),
-      math.subtract(math.pow(score[1].x, this.b), math.pow(score[0].x, this.b))
+    this.c = this.getEstimate(score, score[0].y - 0.01, 1e-6);
+    this.b = math.divide(
+      math.subtract(math.log(math.subtract(score[1].y, this.c)), math.log(math.subtract(score[0].y, this.c))),
+      math.subtract(math.log(score[1].x), math.log(score[0].x))
     ) as number;
-    this.c = math.subtract(score[0].y, math.multiply(this.a, math.pow(score[0].x, this.b))) as number;
+    this.a = math.exp(
+      math.subtract(math.log(math.subtract(score[0].y, this.c)), math.multiply(this.b, math.log(score[0].x)))
+    ) as number;
+    console.log(
+      math.subtract(math.log(math.subtract(score[0].y, this.c)), math.multiply(this.b, math.log(score[0].x)))
+    );
   }
 
-  private getEstimate(score: Vector[], b1: number, b2: number, l: number, n: number) {
-    let b;
-    for (let k = 0; k < n; k++) {
-      if (this.secant(score, b1, b2) == 0) {
-        throw new Error("出现奇异情况");
-      }
-      b = b2 - this.delta(score, b2) / this.secant(score, b1, b2);
-      if (math.abs(math.subtract(b, b2)) < l) {
-        return b;
-      }
-      b1 = b2;
-      b2 = b;
-    }
-    throw new Error("迭代失败，已达最大迭代次数");
+  private getEstimate(score: Vector[], c: number, l: number) {
+    let p;
+    do {
+      p = c;
+      c = math.subtract(c, math.divide(this.fc(score, c), this.derivative(score, c))) as number;
+    } while (math.abs(math.subtract(c, p)) > l);
+    return c;
   }
 
-  //弦截法
-  private secant(score: Vector[], x1: number, x2: number) {
-    return math.divide(math.subtract(this.delta(score, x2), this.delta(score, x1)), math.subtract(x2, x1));
+  //牛顿法
+  private fc(score: Vector[], c) {
+    const ly1 = math.log(math.subtract(score[0].y, c));
+    const ly2 = math.log(math.subtract(score[1].y, c));
+    const ly3 = math.log(math.subtract(score[2].y, c));
+    const p1 = math.divide(math.subtract(ly3, ly1), math.subtract(ly2, ly1));
+    const p2 = math.divide(
+      math.subtract(math.log(score[2].x), math.log(score[0].x)),
+      math.subtract(math.log(score[1].x), math.log(score[0].x))
+    );
+    return math.subtract(p1, p2) as number;
   }
 
-  private delta(score: Vector[], b: number) {
-    const px = math.pow(score[0].x, b);
-    const dy = math.divide(math.subtract(score[2].y, score[0].y), math.subtract(score[1].y, score[0].y));
-
-    return math
-      .chain(math.pow(score[2].x, b))
-      .subtract(px)
-      .divide(math.subtract(math.pow(score[1].x, b), px))
-      .subtract(dy)
-      .done() as number;
+  private derivative(score: Vector[], c: number) {
+    const ly1 = math.log(math.subtract(score[0].y, c));
+    const ly2 = math.log(math.subtract(score[1].y, c));
+    const ly3 = math.log(math.subtract(score[2].y, c));
+    const dly1 = math.divide(1, math.subtract(c, score[0].y));
+    const dly2 = math.divide(1, math.subtract(c, score[1].y));
+    const dly3 = math.divide(1, math.subtract(c, score[2].y));
+    const p1 = math.divide(math.subtract(dly3, dly1), math.subtract(ly2, ly1));
+    const p2 = math
+      .chain(math.subtract(dly2, dly1))
+      .multiply(math.subtract(ly3, ly1))
+      .divide(math.pow(math.subtract(ly2, ly1), 2))
+      .done();
+    return math.subtract(p1, p2) as number;
   }
 }

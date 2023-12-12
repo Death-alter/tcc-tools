@@ -1,4 +1,4 @@
-# tcc-tool
+# tcc-tools
 
 ## Project setup
 ```
